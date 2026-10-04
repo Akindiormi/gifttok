@@ -47,7 +47,7 @@ class _GiftsScreenState extends State<GiftsScreen> {
                             Text('${fmt(g.given)} given',
                                 style: const TextStyle(fontWeight: FontWeight.w700)),
                             Text(valueRange(0, g.value),
-                                style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                                style: const TextStyle(fontSize: 12, color: kMuted)),
                           ]),
                     ),
                 ])),

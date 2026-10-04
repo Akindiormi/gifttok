@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android
 
 on:
   push:
@@ -18,12 +18,33 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Generate Android project
-        run: flutter create --platforms=android --org com.gifttok .
+
+      - name: Generate Android project (package com.nextel.app)
+        run: |
+          flutter create --platforms=android --org com.nextel --project-name gifttok .
+          OLD=com.nextel.gifttok
+          NEW=com.nextel.app
+          grep -rl "$OLD" android | xargs sed -i "s/$OLD/$NEW/g"
+          KT=$(find android/app/src/main -name MainActivity.kt)
+          DIR=$(dirname "$KT")
+          mkdir -p "$(dirname "$DIR")/app"
+          mv "$KT" "$(dirname "$DIR")/app/MainActivity.kt"
+          rmdir "$DIR" 2>/dev/null || true
+          sed -i 's/android:label="[^"]*"/android:label="GiftTok"/' android/app/src/main/AndroidManifest.xml
+
       - run: flutter pub get
-      - name: Build release APK
-        run: flutter build apk --release
+
+      - name: Build APK (one file per phone type, small)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build app bundle (for Play Store)
+        run: flutter build appbundle --release
+
       - uses: actions/upload-artifact@v4
         with:
           name: gifttok-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/*.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gifttok-aab
+          path: build/app/outputs/bundle/release/app-release.aab

@@ -14,7 +14,8 @@ String valueRange(double a, double b) => 'GBP ${a.toInt()}-${b.toInt()}';
 class Logo extends StatelessWidget {
   const Logo({super.key});
   @override
-  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
+  Widget build(BuildContext context) =>
+      Row(mainAxisSize: MainAxisSize.min, children: [
         Image.asset('assets/brand/gifttok-mark.png',
             height: 28,
             errorBuilder: (_, __, ___) =>
@@ -25,12 +26,41 @@ class Logo extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-              color: kTeal.withOpacity(.15),
+              color: kTeal.withOpacity(.2),
               borderRadius: BorderRadius.circular(8)),
           child: const Text('Beta',
-              style: TextStyle(fontSize: 11, color: kTeal, fontWeight: FontWeight.w700)),
+              style: TextStyle(
+                  fontSize: 11, color: kTeal, fontWeight: FontWeight.w700)),
         ),
       ]);
+}
+
+class PulseDot extends StatefulWidget {
+  const PulseDot({super.key});
+  @override
+  State<PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 900))
+    ..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+        opacity: Tween<double>(begin: .3, end: 1).animate(_c),
+        child: Container(
+            width: 8,
+            height: 8,
+            decoration:
+                const BoxDecoration(color: kLive, shape: BoxShape.circle)),
+      );
 }
 
 class Panel extends StatelessWidget {
@@ -38,12 +68,13 @@ class Panel extends StatelessWidget {
   const Panel({super.key, required this.child});
   @override
   Widget build(BuildContext context) => Container(
+        width: double.infinity,
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE3F0F0))),
+            color: kCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: kBorder)),
         child: child,
       );
 }
@@ -57,9 +88,10 @@ class SectionTitle extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           if (sub != null)
-            Text(sub!, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+            Text(sub!, style: const TextStyle(color: kMuted, fontSize: 13)),
         ]),
       );
 }
@@ -71,35 +103,61 @@ class StatTile extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE3F0F0))),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(color: Colors.black54, fontSize: 12)),
-          const SizedBox(height: 4),
-          FittedBox(
-              child: Text(value,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800))),
-        ]),
+            color: kCard,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: kBorder)),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(label, style: const TextStyle(color: kMuted, fontSize: 12)),
+              const SizedBox(height: 4),
+              FittedBox(
+                  child: Text(value,
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.w800))),
+            ]),
       );
 }
 
 class CreatorTile extends StatelessWidget {
   final Creator c;
   final bool showEarnings;
-  const CreatorTile(this.c, {super.key, this.showEarnings = true});
+  final int? rank;
+  const CreatorTile(this.c, {super.key, this.showEarnings = true, this.rank});
   @override
   Widget build(BuildContext context) => ListTile(
         contentPadding: EdgeInsets.zero,
         onTap: () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => CreatorScreen(handle: c.handle))),
-        leading: CircleAvatar(
-            backgroundColor: c.isLive ? kTeal : Colors.grey.shade300,
-            child: Text(c.name.characters.first,
-                style: const TextStyle(color: Colors.white))),
-        title: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text('@${c.handle}'),
+        leading: Row(mainAxisSize: MainAxisSize.min, children: [
+          if (rank != null)
+            SizedBox(
+                width: 22,
+                child: Text('$rank',
+                    style: const TextStyle(
+                        color: kMuted, fontWeight: FontWeight.w700))),
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                    color: c.isLive ? kLive : Colors.transparent, width: 2)),
+            child: CircleAvatar(
+                backgroundColor: c.isLive ? kTeal : kBorder,
+                child: Text(c.name.characters.first,
+                    style: const TextStyle(color: Colors.white))),
+          ),
+        ]),
+        title: Row(children: [
+          Flexible(
+              child: Text(c.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700))),
+          if (c.isLive) ...[const SizedBox(width: 6), const PulseDot()],
+        ]),
+        subtitle: Text('@${c.handle}', style: const TextStyle(color: kMuted)),
         trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -107,10 +165,10 @@ class CreatorTile extends StatelessWidget {
               Text(c.isLive ? '${fmt(c.viewers)} viewers' : 'Offline',
                   style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: c.isLive ? kTeal : Colors.black45)),
+                      color: c.isLive ? kTeal : kMuted)),
               if (showEarnings)
                 Text(valueRange(c.valueMin, c.valueMax),
-                    style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                    style: const TextStyle(fontSize: 12, color: kMuted)),
             ]),
       );
 }

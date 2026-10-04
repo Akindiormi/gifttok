@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
+import '../store.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -29,15 +30,37 @@ class _HomeScreenState extends State<HomeScreen> {
             color: kTeal,
             onRefresh: _refresh,
             child: ListView(padding: const EdgeInsets.all(16), children: [
-              const Text('CREATOR MONITORING',
-                  style: TextStyle(color: kTeal, fontWeight: FontWeight.w800, fontSize: 12)),
-              const SizedBox(height: 6),
-              const Text('See who is live, what they are earning, and who is moving fast.',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, height: 1.15)),
-              const SizedBox(height: 8),
-              const Text(
-                  'GiftTok watches public TikTok Live creators and brings their status, viewer counts, gifts, and gift earnings into one easy board.',
-                  style: TextStyle(color: Colors.black54)),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(26),
+                    gradient: const LinearGradient(
+                        colors: [kTeal, Color(0xFF0A6E7A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight),
+                    boxShadow: [
+                      BoxShadow(color: kTeal.withOpacity(.3), blurRadius: 24)
+                    ]),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  ValueListenableBuilder<String?>(
+                    valueListenable: store.name,
+                    builder: (_, n, __) => Text('Hi, ${n ?? ''}',
+                        style: const TextStyle(
+                            color: Colors.white70, fontWeight: FontWeight.w700)),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text('See who is live and who is earning.',
+                      style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          height: 1.15,
+                          color: Colors.white)),
+                  const SizedBox(height: 8),
+                  const Text(
+                      'Live status, viewers and gift earnings of public TikTok Live creators in one place.',
+                      style: TextStyle(color: Colors.white70)),
+                ]),
+              ),
               const SizedBox(height: 16),
               GridView.count(
                 crossAxisCount: 2,
@@ -58,7 +81,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const SectionTitle('Top Revenue',
                     sub: 'Estimated gift earnings from the last 24 hours'),
-                for (final c in b.topRevenue) CreatorTile(c),
+                for (var i = 0; i < b.topRevenue.length; i++)
+                  CreatorTile(b.topRevenue[i], rank: i + 1),
               ])),
               Panel(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -68,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ])),
               const Text('GiftTok is not affiliated with TikTok or ByteDance.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.black45, fontSize: 12)),
+                  style: TextStyle(color: kMuted, fontSize: 12)),
             ]),
           );
         },

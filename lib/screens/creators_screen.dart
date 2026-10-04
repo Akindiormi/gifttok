@@ -61,7 +61,7 @@ class _CreatorsScreenState extends State<CreatorsScreen> {
                       hintText: 'Search creators',
                       prefixIcon: const Icon(Icons.search),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: kCard,
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide.none)),

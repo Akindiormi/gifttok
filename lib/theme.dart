@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 
 const kTeal = Color(0xFF10BDB8);
-const kBg = Color(0xFFF6FBFB);
-const kInk = Color(0xFF0F2A2A);
+const kBg = Color(0xFF071314);
+const kCard = Color(0xFF0E2124);
+const kBorder = Color(0xFF1A3A3D);
+const kMuted = Color(0xFF8FAFB0);
+const kLive = Color(0xFFFF4D6D);
 
 ThemeData buildTheme() => ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: kTeal, primary: kTeal),
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+          seedColor: kTeal, brightness: Brightness.dark, primary: kTeal),
       scaffoldBackgroundColor: kBg,
       appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: kInk,
+          backgroundColor: kBg,
+          foregroundColor: Colors.white,
           elevation: 0,
-          scrolledUnderElevation: 1),
-      navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Colors.white, indicatorColor: Color(0x3310BDB8)),
+          scrolledUnderElevation: 0),
+      navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: kCard,
+          indicatorColor: kTeal.withOpacity(.25)),
+      dialogBackgroundColor: kCard,
     );

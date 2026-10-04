@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
+import '../store.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -32,7 +33,7 @@ class CreatorScreen extends StatelessWidget {
               Row(children: [
                 CircleAvatar(
                     radius: 30,
-                    backgroundColor: c.isLive ? kTeal : Colors.grey,
+                    backgroundColor: c.isLive ? kTeal : kBorder,
                     child: Text(c.name.characters.first,
                         style: const TextStyle(color: Colors.white, fontSize: 22))),
                 const SizedBox(width: 12),
@@ -41,16 +42,12 @@ class CreatorScreen extends StatelessWidget {
                   Text(c.name,
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
                   Text(c.isLive ? 'Live now' : 'Offline',
-                      style: TextStyle(color: c.isLive ? kTeal : Colors.black45)),
+                      style: TextStyle(color: c.isLive ? kTeal : kMuted)),
                 ])),
                 ValueListenableBuilder<Set<String>>(
-                  valueListenable: follows,
+                  valueListenable: store.follows,
                   builder: (_, f, __) => FilledButton(
-                    onPressed: () {
-                      final n = {...f};
-                      n.contains(handle) ? n.remove(handle) : n.add(handle);
-                      follows.value = n;
-                    },
+                    onPressed: () => store.toggleFollow(handle),
                     child: Text(f.contains(handle) ? 'Following' : 'Follow'),
                   ),
                 ),
