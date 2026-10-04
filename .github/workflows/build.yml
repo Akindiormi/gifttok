@@ -1,0 +1,111 @@
+name: Build GiftTok Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build signed APK & AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # never let a hung step stall the build indefinitely
+    permissions:
+      contents: write # required to publish the signed build to a Release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Decode keystore
+        run: |
+          # Strip any whitespace/newlines the base64 may have picked up when the
+          # secret was pasted, so accidental line-wrapping cannot corrupt the file.
+          printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 --decode > android/app/nextel-keystore.jks
+
+      - name: Verify keystore is readable
+        run: |
+          keytool -list \
+            -keystore android/app/nextel-keystore.jks \
+            -storepass "${{ secrets.STORE_PASSWORD }}" \
+            -alias "${{ secrets.KEY_ALIAS }}"
+
+      - name: Create key.properties
+        run: |
+          cat > android/key.properties <<EOF
+          storeFile=nextel-keystore.jks
+          storePassword=${{ secrets.STORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Build release App Bundle (AAB)
+        run: flutter build appbundle --release
+
+      - name: Stage build outputs with clear names
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/gifttok-latest.apk
+          cp build/app/outputs/bundle/release/app-release.aab dist/gifttok-latest.aab
+          ls -lh dist
+
+      # Publish to a GitHub Release. Release assets have free, unlimited storage
+      # separate from the Actions artifact-storage quota. We use a stable
+      # "latest" tag so there is always ONE reliable download link.
+      - name: Publish signed build to the latest Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: GiftTok (latest build)
+          make_latest: true
+          files: |
+            dist/gifttok-latest.apk
+            dist/gifttok-latest.aab
+          body: |
+            Signed release APK and AAB for **GiftTok**, built under the
+            `com.nextel.app` package so it publishes as an update to the
+            existing Nextel Play Store listing.
+
+            - **gifttok-latest.apk** — install directly on any Android phone to test
+            - **gifttok-latest.aab** — upload to Google Play Console to publish
+
+            This release is updated on every push to `main`.
+            Build ${{ github.run_number }} · commit ${{ github.sha }}
+
+      # Also upload as workflow artifacts when the account's artifact-storage
+      # quota allows. Non-fatal so a full quota never fails the build.
+      - name: Upload APK artifact (best-effort)
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: gifttok-release-apk
+          path: dist/gifttok-latest.apk
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Upload AAB artifact (best-effort)
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: gifttok-release-aab
+          path: dist/gifttok-latest.aab
+          retention-days: 5
+          if-no-files-found: warn
